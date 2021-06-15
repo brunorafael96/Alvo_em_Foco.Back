@@ -1,0 +1,103 @@
+<template>
+  <section>
+    <h2>Adicionar Produto</h2>
+    <ProdutoAdicionar />
+    <h2>Seus Produtos</h2>
+    <!-- {{ usuario_produtos }} -->
+    <transition-group v-if="usuario_produtos.reg" name="list" tag="ul">
+      <li v-for="(produto, index) in usuario_produtos.reg" :key="index">
+        <ProdutoItem :produto="produto">
+          <p class="descricao">{{ produto.descricao }}</p>
+          <button class="deletar" @click="deletarProduto(produto._id)">
+            Deletar
+          </button>
+        </ProdutoItem>
+      </li>
+      {{ usuario_produtos }}
+    </transition-group>
+    <div v-if="!usuario_produtos.reg">
+      <p>Não há produtos cadastrados ainda</p>
+    </div>
+  </section>
+</template>
+
+<script>
+import ProdutoAdicionar from "@/components/ProdutoAdicionar";
+import ProdutoItem from "@/components/ProdutoItem";
+import { mapState, mapActions } from "vuex";
+import { api } from "@/services.js";
+export default {
+  name: "UsuarioProdutos",
+  components: {
+    ProdutoAdicionar,
+    ProdutoItem
+  },
+  data() {
+    return {};
+  },
+  computed: {
+    ...mapState(["login", "usuario", "usuario_produtos"])
+  },
+  methods: {
+    ...mapActions(["getUsuarioProdutos"]),
+    deletarProduto(id) {
+      console.log("id do produto: ", id);
+
+      const confirmar = window.confirm("Deseja deletar este produto?");
+      if (confirmar) {
+        api
+          .delete(`/produto/remove/${id}`)
+          .then(() => {
+            this.getUsuarioProdutos();
+          })
+          .catch((e) => {
+            console.log(e.response);
+          });
+      }
+    }
+  },
+
+  watch: {
+    login() {
+      this.getUsuarioProdutos();
+    }
+  },
+
+  created() {
+    if (this.login) {
+      console.log(this.usuario_produtos);
+      this.getUsuarioProdutos();
+    }
+  }
+};
+</script>
+
+<style scoped>
+h2 {
+  margin-bottom: 20px;
+}
+
+.list-enter,
+.list-leave-to {
+  opacity: 0;
+  transform: translate3d(20px, 0, 0);
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s;
+}
+
+.deletar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  background: url("../../assets/remove.svg") no-repeat center center;
+  width: 24px;
+  height: 24px;
+  text-indent: -150px;
+  overflow: hidden;
+  border: none;
+}
+</style>
